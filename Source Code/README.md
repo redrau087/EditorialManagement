@@ -16,3 +16,10 @@ A class to contain log information for the ACM. This tracks the users requesting
 > Inherits ACM  
 
 Contains data specific to the Editorial Managment system and implements it as an ACM. This includes the methods to check actions for each user in the system
+
+
+
+# To Do
+- [ ] Testing for each class
+- [ ] Testing for the Editorial Management system
+- [ ] Make front-end for actual use
