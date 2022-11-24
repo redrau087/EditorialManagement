@@ -119,11 +119,11 @@ public abstract class ACM {
         for (int x = 0; x < users.size(); x++){
             sb.setLength(0);
             sb.append('|');
-            sb.append(userRoles.get(x));
-            sb.append(" ".repeat(maxSize[0] - userRoles.get(x).length()));
-            sb.append('|');
             sb.append(users.get(x));
-            sb.append(" ".repeat(maxSize[1] - users.get(x).length()));
+            sb.append(" ".repeat(maxSize[0] - users.get(x).length()));
+            sb.append('|');
+            sb.append(userRoles.get(x));
+            sb.append(" ".repeat(maxSize[1] - userRoles.get(x).length()));
             sb.append('|');
             System.out.println(sb.toString());
         }
