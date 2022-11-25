@@ -1,5 +1,8 @@
 import java.util.Arrays;
 
+/**
+ * A class to hold the names and permissions for each ACM entry
+ */
 public final class Capabilities {
     //region Variables
     private final String[] capabilityNames;

@@ -1,5 +1,8 @@
 import java.util.ArrayList;
 
+/**
+ * A basic class to log ACM usage for testing / checking
+ */
 public final class ACMUse {
     //region Variables
     final String user;

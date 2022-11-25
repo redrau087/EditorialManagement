@@ -2,6 +2,9 @@ import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+/**
+ * An abstract ACM class that holds basic operation instructions
+ */
 public abstract class ACM {
     //region Variables
     protected final ArrayList<String> users;
