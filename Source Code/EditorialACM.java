@@ -2,6 +2,9 @@ import javax.management.relation.Role;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+/**
+ * An ACM-inheriting class that implements the editorial management specific details for the ACM
+ */
 public final class EditorialACM extends ACM {
     //region Constructor
     /**
@@ -42,7 +45,7 @@ public final class EditorialACM extends ACM {
      */
     @Override
     protected String[] GetRoles(){
-        return new String[] {"Author", "Editor", "Associate Editor", "Reviewer", "Administrator"};
+        return new String[] {"Author", "Editor", "Associate_Editor", "Reviewer", "Administrator"};
     }
     //endregion
     //region ACM Entry Checks
@@ -198,14 +201,14 @@ public final class EditorialACM extends ACM {
             return false;
         }
 
-        if (RoleOf(targetIn).equals("Associate Editor")){
+        if (RoleOf(targetIn).equals("Associate_Editor")){
             if (!RoleOf(userIn).equals("Editor") && !RoleOf(userIn).equals("Administrator")){
                 data.add("Incorrect role for invitations. ".concat(RoleOf(userIn)).concat(" cannot invite Associate Editors"));
                 return false; //associate editors can only be invited by editors and administrators
             }
         }
         if (RoleOf(targetIn).equals("Reviewer")){
-            if (!RoleOf(userIn).equals("AssociateEditor") && !RoleOf(userIn).equals("Administrator")){
+            if (!RoleOf(userIn).equals("Associate_Editor") && !RoleOf(userIn).equals("Administrator")){
                 data.add("Incorrect role for invitations".concat(RoleOf(userIn)).concat(" cannot invite Reviewers"));
                 return false; //reviewers can only be invited by associate editors and administrators
             }
@@ -299,6 +302,60 @@ public final class EditorialACM extends ACM {
         }
         data.add(userIn.concat(" does not have Consider Reviews"));
         return false;
+    }
+    /**
+     * Runs a command String
+     * @param command A command string to run. {action} {item} {user1} {user2} (optional)
+     * @return Whether the command was successful
+     */
+    public boolean RunCommand(String command){
+        String[] args = command.split(" ");
+
+        switch (args.length){
+            case 1:
+                switch(args[0]){
+                    case "Print":
+                        PrintACM();
+                        return true;
+                    case "PrintUsers":
+                        PrintUsers();
+                        return true;
+                    case "PrintLog":
+                        PrintLog();
+                        return true;
+                    default:
+                        return false;
+                }
+            case 2:
+                switch (args[0]){
+                    case "PrintLogU":
+                        PrintLog(args[1]);
+                        return true;
+                    case "PrintLogP":
+                        PrintLog(Boolean.parseBoolean(args[1]));
+                        return true;
+                    default:
+                        return false;
+                }
+            case 3:
+                return switch (args[0]) {
+                    case "Add" -> AddUser(args[1], args[2]);
+                    case "Write" -> WriteManuscript(args[1], args[2]);
+                    case "Read" -> ReadManuscript(args[1], args[2]);
+                    case "Submit" -> SubmitManuscript(args[1], args[2]);
+                    case "Accept" -> AcceptInvite(args[1], args[2]);
+                    case "Review" -> Review(args[1], args[2]);
+                    case "Consider Reviews" -> ConsiderReviews(args[1], args[2]);
+                    default -> false;
+                };
+            case 4:
+                if (args[0].equals("Send"))
+                    return SendInvite(args[1], args[2], args[3]);
+                else
+                    return false;
+            default:
+                return false;
+        }
     }
     //endregion
 }
