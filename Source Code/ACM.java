@@ -1,4 +1,3 @@
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -7,16 +6,16 @@ import java.util.HashMap;
  */
 public abstract class ACM {
     //region Variables
-    protected final ArrayList<String> users;
+    protected final ArrayList<String> subjects;
     //List of the names of subjects
-    protected final ArrayList<String> items;
+    protected final ArrayList<String> objects;
     //List of the names of the objects
     protected final ArrayList<ArrayList<Capabilities>> capabilityList;
     //A 2-dimensional list that contains the capability data for each subject with each object
-    //First dimension is user, second dimension is object
+    //First dimension is subject, second dimension is object
     final protected HashMap<String, Capabilities> defaultCapabilities;
     //The default capabilities to be given to each role
-    final protected ArrayList<String> userRoles;
+    final protected ArrayList<String> subjectRoles;
     //List of the roles for each subject
     final private ArrayList<ACMUse> ACMUseList;
     //List of log data for testing the ACM
@@ -27,33 +26,33 @@ public abstract class ACM {
      */
     public ACM(){
         HashMap<String, Capabilities> defaultCapabilitiesIn = GetCapabilities();
-        users = new ArrayList<String>();
-        items = new ArrayList<String>();
+        subjects = new ArrayList<String>();
+        objects = new ArrayList<String>();
         capabilityList = new ArrayList<ArrayList<Capabilities>>();
         defaultCapabilities = defaultCapabilitiesIn;
-        userRoles = new ArrayList<String>();
+        subjectRoles = new ArrayList<String>();
         ACMUseList = new ArrayList<ACMUse>();
     }
     //endregion
-    //region View ACM Data
+    //region Read ACM Data
     /**
      * Prints the ACM as a table
      */
-    public void PrintACM(){
+    protected void PrintACM(){
         StringBuilder sb = new StringBuilder();
         //region Find Max size for each column for clean formatting
-        int[] maxSize = new int[items.size() + 1];
+        int[] maxSize = new int[objects.size() + 1];
 
-        for (String user : users)
-            if (user.length() > maxSize[0])
-                maxSize[0] = user.length();
+        for (String subject : subjects)
+            if (subject.length() > maxSize[0])
+                maxSize[0] = subject.length();
 
-        for (int x = 0; x < items.size(); x++)
-            maxSize[x + 1] = items.get(x).length();
+        for (int x = 0; x < objects.size(); x++)
+            maxSize[x + 1] = objects.get(x).length();
 
         int temp = 0;
-        for (int x = 0; x < users.size(); x++){
-            for (int y = 0; y < items.size(); y++){
+        for (int x = 0; x < subjects.size(); x++){
+            for (int y = 0; y < objects.size(); y++){
                 temp = capabilityList.get(x).get(y).toString().length();
                 if (temp > maxSize[y + 1])
                     maxSize[y + 1] = temp;
@@ -61,7 +60,7 @@ public abstract class ACM {
         }
         //endregion
         //region Create Horizontal Line for formatting
-        int numberOfColumns = items.size() + 2;
+        int numberOfColumns = objects.size() + 2;
         for (int size : maxSize)
             numberOfColumns += size;
         String horizontalLine = "=".repeat(numberOfColumns);
@@ -73,24 +72,24 @@ public abstract class ACM {
         sb.append('|');
         sb.append(" ".repeat(maxSize[0]));
         sb.append('|');
-        for (int x = 0; x < items.size(); x++){
-            sb.append(items.get(x));
-            sb.append(" ".repeat(maxSize[x + 1] - items.get(x).length()));
+        for (int x = 0; x < objects.size(); x++){
+            sb.append(objects.get(x));
+            sb.append(" ".repeat(maxSize[x + 1] - objects.get(x).length()));
             sb.append('|');
         }
         System.out.println(sb.toString());
         //endregion
         //region Print Users and capabilities
-        String user = "";
+        String subject = "";
         String capability = "";
-        for (int x = 0; x < users.size(); x++){
+        for (int x = 0; x < subjects.size(); x++){
             sb.setLength(0);
             sb.append('|');
-            user = users.get(x);
-            sb.append(user);
-            sb.append(" ".repeat(maxSize[0] - user.length()));
+            subject = subjects.get(x);
+            sb.append(subject);
+            sb.append(" ".repeat(maxSize[0] - subject.length()));
             sb.append('|');
-            for (int y = 0; y < items.size(); y++){
+            for (int y = 0; y < objects.size(); y++){
                 capability = capabilityList.get(x).get(y).toString();
                 sb.append(capability);
                 sb.append(" ".repeat(maxSize[y + 1] - capability.length()));
@@ -104,13 +103,13 @@ public abstract class ACM {
     /**
      * Prints the Subject names and their respective roles
      */
-    public void PrintUsers(){
+    protected void PrintUsers(){
         int[] maxSize = new int[2];
 
-        for (String role : userRoles)
+        for (String role : subjectRoles)
             if (role.length() > maxSize[0])
                 maxSize[0] = role.length();
-        for (String name : users)
+        for (String name : subjects)
             if (name.length() > maxSize[1])
                 maxSize[1] = name.length();
 
@@ -119,14 +118,14 @@ public abstract class ACM {
         String horizontalLine = sb.toString();
         System.out.println(horizontalLine);
 
-        for (int x = 0; x < users.size(); x++){
+        for (int x = 0; x < subjects.size(); x++){
             sb.setLength(0);
             sb.append('|');
-            sb.append(users.get(x));
-            sb.append(" ".repeat(maxSize[0] - users.get(x).length()));
+            sb.append(subjects.get(x));
+            sb.append(" ".repeat(maxSize[0] - subjects.get(x).length()));
             sb.append('|');
-            sb.append(userRoles.get(x));
-            sb.append(" ".repeat(maxSize[1] - userRoles.get(x).length()));
+            sb.append(subjectRoles.get(x));
+            sb.append(" ".repeat(maxSize[1] - subjectRoles.get(x).length()));
             sb.append('|');
             System.out.println(sb.toString());
         }
@@ -135,68 +134,106 @@ public abstract class ACM {
     /**
      * Prints the entire log
      */
-    public void PrintLog(){
+    protected void PrintLog(){
         for (ACMUse use : ACMUseList)
             System.out.println(use);
     }
     /**
      * Prints the log data where the specified subject was involved
-     * @param userIn The subject to search for in the log
+     * @param subjectIn The subject to search for in the log
      */
-    public void PrintLog(String userIn){
+    protected void PrintLog(String subjectIn){
         for (ACMUse use : ACMUseList)
-            if (use.user.equals(userIn))
+            if (use.subject.equals(subjectIn))
                 System.out.println(use);
     }
     /**
      * Prints the log data where the permission status is the same as the specified status
      * @param permittedIn The status of the request. True is granted - False is denied
      */
-    public void PrintLog(boolean permittedIn){
+    protected void PrintLog(boolean permittedIn){
         for (ACMUse use : ACMUseList)
             if (use.permitted == permittedIn)
                 System.out.println(use);
     }
     /**
+     * Prints all possible roles
+     */
+    protected void PrintRoles(){
+        for (String role : defaultCapabilities.keySet())
+            System.out.println(role);
+    }
+    /**
+     * Prints all possible capabilities
+     */
+    protected void PrintCapabilities(){
+        //print all possible capabilities
+        System.out.println(defaultCapabilities.get("Administrator"));
+        //administrator always has every capability
+    }
+    /**
+     * Prints all possible capabilities of a given role
+     * @param roleIn The role to list capabilities for
+     */
+    protected void PrintCapabilities(String roleIn){
+        if (defaultCapabilities.containsKey(roleIn))
+            System.out.println(defaultCapabilities.get(roleIn));
+        else
+            System.out.println("Role: ".concat(roleIn).concat(" does not exist"));
+    }
+    /**
      * Finds the role of a specified subject
-     * @param userIn The subject to find the role for
+     * @param subjectIn The subject to find the role for
      * @return The role of the subject
      */
-    protected String RoleOf(String userIn){
-        int index = users.indexOf(userIn);
+    protected String RoleOf(String subjectIn){
+        int index = subjects.indexOf(subjectIn);
         if (index == -1)
             return "";
 
-        return userRoles.get(index);
+        return subjectRoles.get(index);
+    }
+    /**
+     * Determines if a subject has a given capability on the specified object
+     * @param objectIn The object to check for the capability
+     * @param subjectIn The subject trying to perform an action
+     * @param capabilityIn The capability being requested
+     * @return Whether the subject has the capability on the object
+     */
+    protected boolean HasCapability(String objectIn, String subjectIn, String capabilityIn){
+        if (objects.contains(objectIn) && subjects.contains(subjectIn))
+            return capabilityList.get(subjects.indexOf(subjectIn)).get(objects.indexOf(objectIn)).HasAccess(capabilityIn);
+        else
+            return false;
     }
     //endregion
     //region Modify ACM
     /**
      * Add a new subject to the ACM with the given role
-     * @param userIn The subject to add
+     * @param subjectIn The subject to add
      * @param roleIn The role to be given to the subject
      * @return Whether the addition of the subject was successful or not. True is success - False is fail
      */
-    public boolean AddUser(String userIn, String roleIn){
+    protected boolean AddUser(String subjectIn, String roleIn){
         ArrayList<String> data = new ArrayList<String>();
-        data.add("User to Add: ".concat(userIn));
+        data.add("User to Add: ".concat(subjectIn));
         data.add("Role to Give: ".concat(roleIn));
-        //region Check if user exists and role exists
-        if (users.contains(userIn) || !defaultCapabilities.containsKey(roleIn)){
-            data.add("Attempted to add user that already existed");
+        //region Check if subject exists and role exists
+        if (subjects.contains(subjectIn) || !defaultCapabilities.containsKey(roleIn)){
+            data.add("Attempted to add subject that already existed");
 
-            ACMUseList.add(new ACMUse("", "Add User", false, data));
+            ACMUseList.add(new ACMUse("", "Add Subject", false, data));
             return false; //replace later with exception
         }
         //endregion
-        users.add(userIn);
-        userRoles.add(roleIn);
+        subjects.add(subjectIn);
+        subjectRoles.add(roleIn);
         capabilityList.add(new ArrayList<Capabilities>());
-        for (int x = 0; x < items.size(); x++)
-            capabilityList.get(users.size() - 1).add(new Capabilities(defaultCapabilities.get(roleIn)));
+        for (int x = 0; x < objects.size(); x++)
+            capabilityList.get(subjects.size() - 1).add(new Capabilities(defaultCapabilities.get(roleIn)));
 
-        data.add("Successfully added user");
-        ACMUseList.add(new ACMUse("", "Add User", true, data));
+        data.add("Successfully added subject");
+        ACMUseList.add(new ACMUse("", "Add Subject", true, data));
         return true;
     }
     /**
