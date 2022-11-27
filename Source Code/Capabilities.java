@@ -55,6 +55,19 @@ public final class Capabilities {
     //endregion
     //region Access Methods
     /**
+     * Lists the names of each capability even if it is not permitted
+     * @return A string containing the names of all the capabilities
+     */
+    public String ListAllCapabilities(){
+        StringBuilder sb = new StringBuilder();
+        for (String capabilityName : capabilityNames) {
+            if (!sb.isEmpty())
+                sb.append('/');
+            sb.append(capabilityName);
+        }
+        return sb.toString();
+    }
+    /**
      * Determines if a given capability is allowed
      * @param capabilityName The capability to check
      * @return Whether there is access for the capability. True is enabled - False is disabled
