@@ -3,7 +3,7 @@ import java.util.ArrayList;
 /**
  * A basic class to log ACM usage for testing / checking
  */
-public final class ACMUse {
+public final class LogEntry {
     //region Variables
     String subject;
     //The user requesting the action
@@ -16,17 +16,24 @@ public final class ACMUse {
     //endregion
     //region Constructor
     /**
-     * The default constructor
+     * The partial constructor
      * @param permittedIn Whether the action was permitted
      * @param effectsIn Extra information
      */
-    public ACMUse(boolean permittedIn, ArrayList<String> effectsIn){
+    public LogEntry(boolean permittedIn, ArrayList<String> effectsIn){
         subject = "";
         capabilityRequested = "";
         permitted = permittedIn;
         effects = effectsIn;
     }
-    public ACMUse(String subjectIn, String capabilityRequestedIn, boolean permittedIn, ArrayList<String> effectsIn){
+    /**
+     * The complete constructor
+     * @param subjectIn The subject requesting a capability
+     * @param capabilityRequestedIn The capability requested
+     * @param permittedIn Whether the action was permitted
+     * @param effectsIn Extra information
+     */
+    public LogEntry(String subjectIn, String capabilityRequestedIn, boolean permittedIn, ArrayList<String> effectsIn){
         subject = subjectIn;
         capabilityRequested = capabilityRequestedIn;
         permitted = permittedIn;
