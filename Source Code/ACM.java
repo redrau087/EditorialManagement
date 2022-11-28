@@ -106,10 +106,10 @@ public abstract class ACM {
     protected void PrintUsers(){
         int[] maxSize = new int[2];
 
-        for (String role : subjectRoles)
+        for (String role : subjects)
             if (role.length() > maxSize[0])
                 maxSize[0] = role.length();
-        for (String name : subjects)
+        for (String name : subjectRoles)
             if (name.length() > maxSize[1])
                 maxSize[1] = name.length();
 
@@ -177,7 +177,7 @@ public abstract class ACM {
      */
     protected void PrintCapabilities(String roleIn){
         if (defaultCapabilities.containsKey(roleIn))
-            System.out.println(defaultCapabilities.get(roleIn));
+            System.out.println(defaultCapabilities.get(roleIn).ListAllCapabilities());
         else
             System.out.println("Role: ".concat(roleIn).concat(" does not exist"));
     }
