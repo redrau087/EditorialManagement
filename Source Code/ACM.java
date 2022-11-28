@@ -17,7 +17,7 @@ public abstract class ACM {
     //The default capabilities to be given to each role
     final protected ArrayList<String> subjectRoles;
     //List of the roles for each subject
-    final private ArrayList<ACMUse> ACMUseList;
+    final private ArrayList<LogEntry> log;
     //List of log data for testing the ACM
     //endregion
     //region Constructor
@@ -31,7 +31,7 @@ public abstract class ACM {
         capabilityList = new ArrayList<ArrayList<Capabilities>>();
         defaultCapabilities = defaultCapabilitiesIn;
         subjectRoles = new ArrayList<String>();
-        ACMUseList = new ArrayList<ACMUse>();
+        log = new ArrayList<LogEntry>();
     }
     //endregion
     //region Read ACM Data
@@ -135,7 +135,7 @@ public abstract class ACM {
      * Prints the entire log
      */
     protected void PrintLog(){
-        for (ACMUse use : ACMUseList)
+        for (LogEntry use : log)
             System.out.println(use);
     }
     /**
@@ -143,7 +143,7 @@ public abstract class ACM {
      * @param subjectIn The subject to search for in the log
      */
     protected void PrintLog(String subjectIn){
-        for (ACMUse use : ACMUseList)
+        for (LogEntry use : log)
             if (use.subject.equals(subjectIn))
                 System.out.println(use);
     }
@@ -152,7 +152,7 @@ public abstract class ACM {
      * @param permittedIn The status of the request. True is granted - False is denied
      */
     protected void PrintLog(boolean permittedIn){
-        for (ACMUse use : ACMUseList)
+        for (LogEntry use : log)
             if (use.permitted == permittedIn)
                 System.out.println(use);
     }
@@ -214,16 +214,22 @@ public abstract class ACM {
      * @param roleIn The role to be given to the subject
      * @return Whether the addition of the subject was successful or not. True is success - False is fail
      */
-    protected boolean AddUser(String subjectIn, String roleIn){
+    protected boolean AddSubject(String subjectIn, String roleIn){
         ArrayList<String> data = new ArrayList<String>();
         data.add("User to Add: ".concat(subjectIn));
         data.add("Role to Give: ".concat(roleIn));
         //region Check if subject exists and role exists
-        if (subjects.contains(subjectIn) || !defaultCapabilities.containsKey(roleIn)){
+        if (subjects.contains(subjectIn)){
             data.add("Attempted to add subject that already existed");
 
-            ACMUseList.add(new ACMUse("", "Add Subject", false, data));
-            return false; //replace later with exception
+            log.add(new LogEntry("", "Add Subject", false, data));
+            return false;
+        }
+        if (!defaultCapabilities.containsKey(roleIn)){
+            data.add("Role does not exist");
+
+            log.add(new LogEntry("", "Add Subject", false, data));
+            return false;
         }
         //endregion
         subjects.add(subjectIn);
@@ -233,15 +239,15 @@ public abstract class ACM {
             capabilityList.get(subjects.size() - 1).add(new Capabilities(defaultCapabilities.get(roleIn)));
 
         data.add("Successfully added subject");
-        ACMUseList.add(new ACMUse("", "Add Subject", true, data));
+        log.add(new LogEntry("", "Add Subject", true, data));
         return true;
     }
     /**
-     * Adds ACMUse data to the log
-     * @param acmUseIn The data to add to the log
+     * Adds LogEntry data to the log
+     * @param currentLogIn The data to add to the log
      */
-    protected void AddACMUse(ACMUse acmUseIn){
-        ACMUseList.add(acmUseIn);
+    protected void AddLog(LogEntry currentLogIn){
+        log.add(currentLogIn);
     }
     //endregion
     //region Abstract Methods
