@@ -88,12 +88,6 @@ public final class Capabilities {
     //endregion
     //region Change Access
     /**
-     * Enables access to all capabilities
-     */
-    public void GiveFullAccess(){
-        Arrays.fill(capabilityAccess, true);
-    }
-    /**
      * Disables access to all capabilities
      */
     public void GiveNoAccess(){
