@@ -1,3 +1,4 @@
+import javax.management.relation.Role;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -7,10 +8,12 @@ import java.util.HashMap;
 public final class EditorialACM extends ACM {
     //region Variables
     public HashMap<String, String> helpMessages = new HashMap<String, String>();
+    //A hashmap of functionName - helpMessages for the cli
     private final ArrayList<String> createRoles = new ArrayList<String>();
+    private final ArrayList<String> editorRoles = new ArrayList<String>();
+    private final ArrayList<String> reviewerRoles = new ArrayList<String>();
     private ACMUse currentLog;
     private ArrayList<String> logData;
-    //A hashmap of functionName - helpMessages for the cli
     //endregion
     //region Constructor
     /**
@@ -22,6 +25,12 @@ public final class EditorialACM extends ACM {
         createRoles.add("Author/Associate_Editor");
         createRoles.add("Author/Reviewer");
         createRoles.add("Administrator");
+        editorRoles.add("Associate_Editor");
+        editorRoles.add("Author/Associate_Editor");
+        editorRoles.add("Administrator");
+        reviewerRoles.add("Reviewer");
+        reviewerRoles.add("Author/Reviewer");
+        reviewerRoles.add("Administrator");
 
         helpMessages.put("Add", """
                 Add {subjectName} {role}
@@ -55,6 +64,16 @@ public final class EditorialACM extends ACM {
                 Consider_Reviews {objectName}, {subjectName}
                 The subject must have Consider_Review access to {objectName}
                 This removes all access""");
+        helpMessages.put("Print", "Print\nThis prints the ACM");
+        helpMessages.put("PrintUsers", "PrintUsers\nThis prints the users and their roles");
+        helpMessages.put("PrintLog", "PrintLog\nThis prints the entire log of ACM usage");
+        helpMessages.put("PrintLogUser", "PrintLogUser {subjectIn}\nThis prints the log data where the log.subject=subjectIn");
+        helpMessages.put("PrintLogPermission", """
+                PrintLogPermission {permitted}
+                This prints the log data where the log.permitted=permitted
+                {permitted} should equal either "true" or "false\"""");
+        helpMessages.put("PrintCapabilities", "PrintCapabilities\nLists all the possible capabilities in the system");
+        helpMessages.put("PrintCapabilitiesRole", "PrintCapabilities {roleName}\nLists all the possible capabilities of {roleName}");
 
         logData = new ArrayList<String>();
     }
@@ -105,7 +124,7 @@ public final class EditorialACM extends ACM {
      * @param subjectIn The author's name
      * @return Whether the action was successful
      */
-    public boolean CreateManuscript(String objectIn, String subjectIn){
+    private boolean CreateManuscript(String objectIn, String subjectIn){
         String capabilityRequested = "Create";
         currentLog.subject = subjectIn;
         currentLog.capabilityRequested = capabilityRequested;
@@ -132,8 +151,8 @@ public final class EditorialACM extends ACM {
 
             else{
                 capabilityList.get(x).add(
-                        new Capabilities(new String[] {"Owner", "Write", "Read", "Submit"},
-                                new boolean[] {true, true, true, true}));
+                        new Capabilities(defaultCapabilities.get(subjectRoles.get(subjects.indexOf(subjectIn)))));
+                capabilityList.get(x).get(capabilityList.get(x).size() - 1).AddOverlappedAccess(defaultCapabilities.get("Author")); //give only relevant access
                 logData.add("Gave subject \"".concat(subjects.get(x)).concat("\" owner access to \"").concat(objectIn).concat("\""));
             }
         }
@@ -146,7 +165,7 @@ public final class EditorialACM extends ACM {
      * @param subjectIn The subject attempting to edit the manuscript
      * @return Whether the action was successful
      */
-    public boolean EditManuscript(String objectIn, String subjectIn){
+    private boolean EditManuscript(String objectIn, String subjectIn){
         String capabilityRequested = "Edit";
         currentLog.subject = subjectIn;
         currentLog.capabilityRequested = capabilityRequested;
@@ -167,7 +186,7 @@ public final class EditorialACM extends ACM {
      * @param subjectIn The name of the subject attempting to read the manuscript
      * @return Whether the action was successful
      */
-    public boolean ReadManuscript(String objectIn, String subjectIn){
+    private boolean ReadManuscript(String objectIn, String subjectIn){
         String capabilityRequested = "Read";
         currentLog.subject = subjectIn;
         currentLog.capabilityRequested = capabilityRequested;
@@ -189,7 +208,7 @@ public final class EditorialACM extends ACM {
      * @param subjectIn The subject attempting to submit the manuscript
      * @return Whether the action was successful
      */
-    public boolean SubmitManuscript(String objectIn, String subjectIn){
+    private boolean SubmitManuscript(String objectIn, String subjectIn){
         String capabilityRequested = "Submit";
         currentLog.subject = subjectIn;
         currentLog.capabilityRequested = capabilityRequested;
@@ -205,7 +224,8 @@ public final class EditorialACM extends ACM {
         int objectIndex = objects.indexOf(objectIn);
         for (int x = 0; x < subjects.size(); x++){
             if (subjectRoles.get(x).equals("Editor")){
-                capabilityList.get(x).get(objectIndex).GiveFullAccess();
+                capabilityList.get(x).get(objectIndex).AddOverlappedAccess(defaultCapabilities.get("Editor"));
+                capabilityList.get(x).get(objectIndex).SetAccess("Consider_Reviews", false); //must review first
                 logData.add("Gave ".concat(subjects.get(x)).concat(": ").concat(capabilityList.get(x).get(objectIndex).toString()));
             }
         }
@@ -219,29 +239,26 @@ public final class EditorialACM extends ACM {
      * @param targetIn The subject to receive an invitation
      * @return Whether the action was successful
      */
-    public boolean SendInvite(String objectIn, String subjectIn, String targetIn){
+    private boolean SendInvite(String objectIn, String subjectIn, String targetIn){
         String capabilityRequested = "Send";
         currentLog.subject = subjectIn;
         currentLog.capabilityRequested = capabilityRequested;
 
-
-        if (RoleOf(targetIn).equals("Associate_Editor")){
-            if (!RoleOf(subjectIn).equals("Editor") && !RoleOf(subjectIn).equals("Administrator")){
-                logData.add("Incorrect role for invitations. ".concat(RoleOf(subjectIn)).concat(" cannot invite Associate Editors"));
-                return false; //associate editors can only be invited by editors and administrators
-            }
+        if (!RoleOf(targetIn).equals("Reviewer") && !RoleOf(targetIn).equals("Associate_Editor") &&
+                !RoleOf(targetIn).equals("Author/Reviewer") && !RoleOf(targetIn).equals("Author/Associate_Editor")){
+            logData.add("Incorrect role for invitations".concat(RoleOf(subjectIn)).concat(" cannot invite Reviewers"));
+            return false;
         }
-        if (RoleOf(targetIn).equals("Reviewer")){
-            if (!RoleOf(subjectIn).equals("Associate_Editor") && !RoleOf(subjectIn).equals("Administrator")){
-                logData.add("Incorrect role for invitations".concat(RoleOf(subjectIn)).concat(" cannot invite Reviewers"));
-                return false; //reviewers can only be invited by associate editors and administrators
-            }
-        }
-        currentLog.permitted = true;
 
-        capabilityList.get(subjects.indexOf(targetIn)).get(objects.indexOf(objectIn)).SetAccess("Accept", true);
-        logData.add("Gave: ".concat(targetIn).concat(" Accept"));
-        return true;
+        if (HasCapability(objectIn, subjectIn, capabilityRequested)){
+            currentLog.permitted = true;
+
+            capabilityList.get(subjects.indexOf(targetIn)).get(objects.indexOf(objectIn)).SetAccess("Accept", true);
+            logData.add("Gave: ".concat(targetIn).concat(" Accept"));
+            return true;
+        }
+
+        return false;
     }
     /**
      * Accepts an invitation for a manuscript as a given subject
@@ -249,14 +266,22 @@ public final class EditorialACM extends ACM {
      * @param subjectIn The subject accepting the invitation
      * @return Whether the action was successful
      */
-    public boolean AcceptInvite(String objectIn, String subjectIn){
+    private boolean AcceptInvite(String objectIn, String subjectIn){
         String capabilityRequested = "Accept";
         currentLog.subject = subjectIn;
         currentLog.capabilityRequested = capabilityRequested;
 
         if (HasCapability(objectIn, subjectIn, capabilityRequested)){
             currentLog.permitted = true;
-            capabilityList.get(subjects.indexOf(subjectIn)).get(objects.indexOf(objectIn)).GiveFullAccess();
+            if (editorRoles.contains(subjectRoles.get(subjects.indexOf(subjectIn)))) //associate_editors
+                capabilityList.get(subjects.indexOf(subjectIn)).get(objects.indexOf(objectIn)).
+                        AddOverlappedAccess(defaultCapabilities.get("Associate_Editor"));
+            else if (reviewerRoles.contains(subjectRoles.get(subjects.indexOf(subjectIn)))) //reviewers
+                capabilityList.get(subjects.indexOf(subjectIn)).get(objects.indexOf(objectIn)).
+                        AddOverlappedAccess(defaultCapabilities.get("Reviewer"));
+            else //administrators
+                return true;
+
             capabilityList.get(subjects.indexOf(subjectIn)).get(objects.indexOf(objectIn)).SetAccess(capabilityRequested, false);
             //remove ability to accept invite
             logData.add("Removed: ".concat(subjectIn).concat(" Accept"));
@@ -274,15 +299,21 @@ public final class EditorialACM extends ACM {
      * @param subjectIn The subject reviewing the manuscript
      * @return Whether the action was successful
      */
-    public boolean Review(String objectIn, String subjectIn){
+    private boolean Review(String objectIn, String subjectIn){
         String capabilityRequested = "Review";
         currentLog.subject = subjectIn;
         currentLog.capabilityRequested = capabilityRequested;
 
-        if (capabilityList.get(subjects.indexOf(subjectIn)).get(objects.indexOf(objectIn)).HasAccess(capabilityRequested)){
+        if (HasCapability(objectIn, subjectIn, capabilityRequested)){
             currentLog.permitted = true;
-            capabilityList.get(subjects.indexOf(subjectIn)).get(objects.indexOf(objectIn)).GiveNoAccess();
+            if (subjectRoles.get(subjects.indexOf(subjectIn)).equals("Administrator"))
+                return true;
+
+            capabilityList.get(subjects.indexOf(subjectIn)).get(objects.indexOf(objectIn)).SetAccess(capabilityRequested, false);
+            capabilityList.get(subjects.indexOf(subjectIn)).get(objects.indexOf(objectIn)).SetAccess("Send", false);
             capabilityList.get(subjects.indexOf(subjectIn)).get(objects.indexOf(objectIn)).SetAccess("Consider Reviews", true);
+            if (!capabilityList.get(subjects.indexOf(subjectIn)).get(objects.indexOf(objectIn)).HasAccess("Owner"))
+                capabilityList.get(subjects.indexOf(subjectIn)).get(objects.indexOf(objectIn)).SetAccess("Read", false);
             //cannot review more than once
             //if the subject is a reviewer they will lose all access. SetAccess only sets the capability if it exists
             logData.add("Removed: ".concat(subjectIn).concat(" Review"));
@@ -299,16 +330,25 @@ public final class EditorialACM extends ACM {
      * @param subjectIn The subject reviewing the manuscript
      * @return Whether the action was successful
      */
-    public boolean ConsiderReviews(String objectIn, String subjectIn){
+    private boolean ConsiderReviews(String objectIn, String subjectIn){
         String capabilityRequested = "Consider_Reviews";
         currentLog.subject = subjectIn;
         currentLog.capabilityRequested = capabilityRequested;
 
         if (HasCapability(objectIn, subjectIn, capabilityRequested)){
             //options for reviewing later
+            if (subjectRoles.get(subjects.indexOf(subjectIn)).equals("Administrator"))
+                return true;
+
             logData.add("Removed: ".concat(subjectIn).concat(capabilityList.get(subjects.indexOf(subjectIn)).get(objects.indexOf(objectIn)).toString()));
             capabilityList.get(subjects.indexOf(subjectIn)).get(objects.indexOf(objectIn)).GiveNoAccess();
-            //No access after final reviews
+            capabilityList.get(subjects.indexOf(subjectIn)).get(objects.indexOf(objectIn)).SetAccess("Owner", true);
+
+            if (HasCapability(objectIn, subjectIn, "Owner")){
+                capabilityList.get(subjects.indexOf(subjectIn)).get(objects.indexOf(objectIn)).AddOverlappedAccess(defaultCapabilities.get("Author"));
+                logData.add("Gave: ".concat(subjectIn).concat(capabilityList.get(subjects.indexOf(subjectIn)).get(objects.indexOf(objectIn)).toString()));
+            }
+            //No access after final reviews (unless owner)
 
             return true;
         }
@@ -337,6 +377,9 @@ public final class EditorialACM extends ACM {
                     case "PrintLog":
                         PrintLog();
                         return true;
+                    case "PrintCapabilities":
+                        PrintCapabilities();
+                        return true;
                     default:
                         return false;
                 }
@@ -347,6 +390,9 @@ public final class EditorialACM extends ACM {
                         return true;
                     case "PrintLogPermission":
                         PrintLog(Boolean.parseBoolean(args[1]));
+                        return true;
+                    case "PrintCapabilitiesRole":
+                        PrintCapabilities(args[1]);
                         return true;
                     default:
                         return false;
@@ -366,7 +412,6 @@ public final class EditorialACM extends ACM {
                     if (subjects.contains(args[2])){
                         currentLog.subject = args[1];
                         logData.add("The subject already exists");
-                        AddACMUse(currentLog);
                         return false;
                     }
                 }
@@ -390,7 +435,7 @@ public final class EditorialACM extends ACM {
                     case "Submit" -> SubmitManuscript(args[1], args[2]);
                     case "Accept" -> AcceptInvite(args[1], args[2]);
                     case "Review" -> Review(args[1], args[2]);
-                    case "Consider Reviews" -> ConsiderReviews(args[1], args[2]);
+                    case "Consider_Reviews" -> ConsiderReviews(args[1], args[2]);
                     default -> false;
                 };
             case 4:
