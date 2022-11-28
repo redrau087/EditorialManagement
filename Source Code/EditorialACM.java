@@ -1,4 +1,3 @@
-import javax.management.relation.Role;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -10,10 +9,17 @@ public final class EditorialACM extends ACM {
     public HashMap<String, String> helpMessages = new HashMap<String, String>();
     //A hashmap of functionName - helpMessages for the cli
     private final ArrayList<String> createRoles = new ArrayList<String>();
+    //An arraylist of the roles permitted to create a manuscript
     private final ArrayList<String> editorRoles = new ArrayList<String>();
+    //An arraylist of the editor roles
     private final ArrayList<String> reviewerRoles = new ArrayList<String>();
-    private ACMUse currentLog;
+    //An arraylist of the reviewer roles
+    private final ArrayList<String> considerOptions = new ArrayList<String>();
+    //An arraylist of the Consider_Reviews options
+    private LogEntry currentLog;
+    //The current log entry
     private ArrayList<String> logData;
+    //The extra data for the log entry
     //endregion
     //region Constructor
     /**
@@ -31,6 +37,11 @@ public final class EditorialACM extends ACM {
         reviewerRoles.add("Reviewer");
         reviewerRoles.add("Author/Reviewer");
         reviewerRoles.add("Administrator");
+        considerOptions.add("Accept");
+        considerOptions.add("Accept_Minor");
+        considerOptions.add("Accept_Major");
+        considerOptions.add("Reject");
+        considerOptions.add("Report");
 
         helpMessages.put("Add", """
                 Add {subjectName} {role}
@@ -61,9 +72,10 @@ public final class EditorialACM extends ACM {
                 The subject must have review access to {objectName}
                 This removes all access except for Consider_Reviews (if the subject can have that)""");
         helpMessages.put("Consider_Reviews", """
-                Consider_Reviews {objectName}, {subjectName}
+                Consider_Reviews {objectName}, {subjectName} {decision}
                 The subject must have Consider_Review access to {objectName}
-                This removes all access""");
+                Decision options are "Accept", "Accept_Minor", "Accept_Major", "Reject", and "Report"
+                This removes all access unless the subject is the owner""");
         helpMessages.put("Print", "Print\nThis prints the ACM");
         helpMessages.put("PrintUsers", "PrintUsers\nThis prints the users and their roles");
         helpMessages.put("PrintLog", "PrintLog\nThis prints the entire log of ACM usage");
@@ -190,7 +202,7 @@ public final class EditorialACM extends ACM {
         String capabilityRequested = "Read";
         currentLog.subject = subjectIn;
         currentLog.capabilityRequested = capabilityRequested;
-        AddACMUse(currentLog);
+        AddLog(currentLog);
 
 
         if (HasCapability(objectIn, subjectIn, capabilityRequested)){
@@ -330,13 +342,18 @@ public final class EditorialACM extends ACM {
      * @param subjectIn The subject reviewing the manuscript
      * @return Whether the action was successful
      */
-    private boolean ConsiderReviews(String objectIn, String subjectIn){
+    private boolean ConsiderReviews(String objectIn, String subjectIn, String decisionIn){
         String capabilityRequested = "Consider_Reviews";
         currentLog.subject = subjectIn;
         currentLog.capabilityRequested = capabilityRequested;
 
+        if (!considerOptions.contains(decisionIn)){
+            logData.add("Consider_Reviews option: ".concat(decisionIn).concat(" does not exist"));
+            return false;
+        }
+
         if (HasCapability(objectIn, subjectIn, capabilityRequested)){
-            //options for reviewing later
+            logData.add(subjectIn.concat(" reviewed ".concat(objectIn)).concat(" and gave the decision: ").concat(decisionIn));
             if (subjectRoles.get(subjects.indexOf(subjectIn)).equals("Administrator"))
                 return true;
 
@@ -362,7 +379,7 @@ public final class EditorialACM extends ACM {
      */
     public boolean RunCommand(String command){
         logData = new ArrayList<String>();
-        currentLog = new ACMUse(false, logData);
+        currentLog = new LogEntry(false, logData);
         String[] args = command.split(" ");
 
         switch (args.length){
@@ -398,13 +415,17 @@ public final class EditorialACM extends ACM {
                         return false;
                 }
             case 3:
-                AddACMUse(currentLog);
+                AddLog(currentLog);
                 currentLog.capabilityRequested = args[0];
 
                 if (args[0].equals("Create")){
                     if (objects.contains(args[1])){
                         currentLog.subject = args[2];
                         logData.add("The manuscript already exists");
+                        return false;
+                    }
+                    if (!subjects.contains(args[2])){
+                        logData.add("The subject does not exist");
                         return false;
                     }
                 }
@@ -414,6 +435,8 @@ public final class EditorialACM extends ACM {
                         logData.add("The subject already exists");
                         return false;
                     }
+                    else
+                        currentLog.permitted = true;
                 }
                 else{
                     currentLog.subject = args[2];
@@ -428,18 +451,17 @@ public final class EditorialACM extends ACM {
                 }
 
                 return switch (args[0]) {
-                    case "Add" -> AddUser(args[1], args[2]);
+                    case "Add" -> AddSubject(args[1], args[2]);
                     case "Create" -> CreateManuscript(args[1], args[2]);
                     case "Edit" -> EditManuscript(args[1], args[2]);
                     case "Read" -> ReadManuscript(args[1], args[2]);
                     case "Submit" -> SubmitManuscript(args[1], args[2]);
                     case "Accept" -> AcceptInvite(args[1], args[2]);
                     case "Review" -> Review(args[1], args[2]);
-                    case "Consider_Reviews" -> ConsiderReviews(args[1], args[2]);
                     default -> false;
                 };
             case 4:
-                AddACMUse(currentLog);
+                AddLog(currentLog);
                 if (!objects.contains(args[1])){
                     logData.add("The manuscript does not exist");
                     return false;
@@ -448,6 +470,9 @@ public final class EditorialACM extends ACM {
                     logData.add("The first subject does not exist");
                     return false;
                 }
+                if (args[0].equals("Consider_Reviews"))
+                    return ConsiderReviews(args[1], args[2], args[3]);
+
                 if (!subjects.contains(args[3])){
                     logData.add("The second subject does not exist");
                     return false;
