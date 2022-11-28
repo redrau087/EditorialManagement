@@ -12,6 +12,8 @@ public class CLI {
     //the command prompt scanner
     private final EditorialACM system;
     //the editorial management ACM
+    private boolean loop;
+    //the CLI loop condition
     //endregion
     //region Constructor
     /**
@@ -19,6 +21,7 @@ public class CLI {
      */
     public CLI(){
         system = new EditorialACM();
+        loop = true;
     }
     //endregion
     //region CLI Options
@@ -27,9 +30,8 @@ public class CLI {
      * @param escape The String to enter to close the CLI
      */
     public void RunCLI(String escape){
-        while (true){
+        while (loop)
             ReadLine(escape);
-        }
     }
     /**
      * Reads the current line in the CLI and runs the command
@@ -53,12 +55,12 @@ public class CLI {
             }
             else if (command.equalsIgnoreCase("roles"))
                 system.PrintRoles();
+            else if (command.equalsIgnoreCase(escape))
+                loop = false;
             else{
                 if (!system.RunCommand(command))
                     System.out.println("The command failed");
             }
-            if (!system.RunCommand(command))
-                System.out.println("The command failed");
         }
         else if (args.length == 2){
             if (args[0].toLowerCase().equals("help")){
@@ -68,8 +70,8 @@ public class CLI {
                     System.out.println("Command \"".concat(args[1].concat("\" does not exist")));
             }
             else
-            if (!system.RunCommand(command))
-                System.out.println("The command failed");
+                if (!system.RunCommand(command))
+                    System.out.println("The command failed");
         }
         else
         if (!system.RunCommand(command))
