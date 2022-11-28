@@ -53,7 +53,7 @@ public final class Capabilities {
         return sb.toString();
     }
     //endregion
-    //region Access Methods
+    //region View Access
     /**
      * Lists the names of each capability even if it is not permitted
      * @return A string containing the names of all the capabilities
@@ -85,6 +85,8 @@ public final class Capabilities {
 
         return capabilityAccess[index];
     }
+    //endregion
+    //region Change Access
     /**
      * Enables access to all capabilities
      */
@@ -106,6 +108,17 @@ public final class Capabilities {
         for (int x = 0; x < capabilityNames.length; x++)
             if (capabilityNames[x].equals(capabilityNameIn))
                 capabilityAccess[x] = access;
+    }
+    /**
+     * Sets access to capabilities where the capabilityName is in the given capabilities instance
+     * @param capabilityIn The instance to compare against
+     */
+    public void AddOverlappedAccess(Capabilities capabilityIn){
+        for (String capabilityName : capabilityIn.capabilityNames){
+            for (int x = 0; x < this.capabilityNames.length; x++)
+                if (this.capabilityNames[x].equals(capabilityName))
+                    this.capabilityAccess[x] = true;
+        }
     }
     //endregion
 }
