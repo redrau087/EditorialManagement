@@ -206,6 +206,9 @@ public abstract class ACM {
         else
             return false;
     }
+    protected Capabilities GetCapability(String objectIn, String subjectIn){
+        return capabilityList.get(subjects.indexOf(subjectIn)).get(objects.indexOf(objectIn));
+    }
     //endregion
     //region Modify ACM
     /**
