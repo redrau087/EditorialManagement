@@ -85,6 +85,13 @@ public final class Capabilities {
 
         return capabilityAccess[index];
     }
+    public boolean ContainsCapability(String capabilityIn){
+        for (String capability : capabilityNames)
+            if (capability.equals(capabilityIn))
+                return true;
+
+        return false;
+    }
     //endregion
     //region Change Access
     /**
