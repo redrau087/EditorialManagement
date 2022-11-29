@@ -8,8 +8,6 @@ public final class EditorialACM extends ACM {
     //region Variables
     public HashMap<String, String> helpMessages = new HashMap<String, String>();
     //A hashmap of functionName - helpMessages for the cli
-    private final ArrayList<String> createRoles = new ArrayList<String>();
-    //An arraylist of the roles permitted to create a manuscript
     private final ArrayList<String> editorRoles = new ArrayList<String>();
     //An arraylist of the editor roles
     private final ArrayList<String> reviewerRoles = new ArrayList<String>();
@@ -27,10 +25,6 @@ public final class EditorialACM extends ACM {
      */
     public EditorialACM(){
         super();
-        createRoles.add("Author");
-        createRoles.add("Author/Associate_Editor");
-        createRoles.add("Author/Reviewer");
-        createRoles.add("Administrator");
         editorRoles.add("Associate_Editor");
         editorRoles.add("Author/Associate_Editor");
         editorRoles.add("Administrator");
@@ -141,7 +135,7 @@ public final class EditorialACM extends ACM {
         currentLog.subject = subjectIn;
         currentLog.capabilityRequested = capabilityRequested;
 
-        if (!createRoles.contains(subjectRoles.get(subjects.indexOf(subjectIn)))){
+        if (!defaultCapabilities.get(subjectRoles.get(subjects.indexOf(subjectIn))).ContainsCapability("Owner")){
             logData.add("User does not have the correct role to create a manuscript");
             return false;
         }
@@ -265,7 +259,7 @@ public final class EditorialACM extends ACM {
         if (HasCapability(objectIn, subjectIn, capabilityRequested)){
             currentLog.permitted = true;
 
-            capabilityList.get(subjects.indexOf(targetIn)).get(objects.indexOf(objectIn)).SetAccess("Accept", true);
+            GetCapability(objectIn, targetIn).SetAccess("Accept", true);
             logData.add("Gave: ".concat(targetIn).concat(" Accept"));
             return true;
         }
@@ -286,18 +280,18 @@ public final class EditorialACM extends ACM {
         if (HasCapability(objectIn, subjectIn, capabilityRequested)){
             currentLog.permitted = true;
             if (editorRoles.contains(subjectRoles.get(subjects.indexOf(subjectIn)))) //associate_editors
-                capabilityList.get(subjects.indexOf(subjectIn)).get(objects.indexOf(objectIn)).
+                GetCapability(objectIn, subjectIn).
                         AddOverlappedAccess(defaultCapabilities.get("Associate_Editor"));
             else if (reviewerRoles.contains(subjectRoles.get(subjects.indexOf(subjectIn)))) //reviewers
-                capabilityList.get(subjects.indexOf(subjectIn)).get(objects.indexOf(objectIn)).
+                GetCapability(objectIn, subjectIn).
                         AddOverlappedAccess(defaultCapabilities.get("Reviewer"));
             else //administrators
                 return true;
 
-            capabilityList.get(subjects.indexOf(subjectIn)).get(objects.indexOf(objectIn)).SetAccess(capabilityRequested, false);
+            GetCapability(objectIn, subjectIn).SetAccess(capabilityRequested, false);
             //remove ability to accept invite
             logData.add("Removed: ".concat(subjectIn).concat(" Accept"));
-            logData.add("Gave: ".concat(subjectIn).concat(" ").concat(capabilityList.get(subjects.indexOf(subjectIn)).get(objects.indexOf(objectIn)).toString()));
+            logData.add("Gave: ".concat(subjectIn).concat(" ").concat(GetCapability(objectIn, subjectIn).toString()));
 
             return true;
         }
@@ -321,15 +315,15 @@ public final class EditorialACM extends ACM {
             if (subjectRoles.get(subjects.indexOf(subjectIn)).equals("Administrator"))
                 return true;
 
-            capabilityList.get(subjects.indexOf(subjectIn)).get(objects.indexOf(objectIn)).SetAccess(capabilityRequested, false);
-            capabilityList.get(subjects.indexOf(subjectIn)).get(objects.indexOf(objectIn)).SetAccess("Send", false);
-            capabilityList.get(subjects.indexOf(subjectIn)).get(objects.indexOf(objectIn)).SetAccess("Consider Reviews", true);
-            if (!capabilityList.get(subjects.indexOf(subjectIn)).get(objects.indexOf(objectIn)).HasAccess("Owner"))
-                capabilityList.get(subjects.indexOf(subjectIn)).get(objects.indexOf(objectIn)).SetAccess("Read", false);
+            GetCapability(objectIn, subjectIn).SetAccess(capabilityRequested, false);
+            GetCapability(objectIn, subjectIn).SetAccess("Send", false);
+            GetCapability(objectIn, subjectIn).SetAccess("Consider Reviews", true);
+            if (!GetCapability(objectIn, subjectIn).HasAccess("Owner"))
+                GetCapability(objectIn, subjectIn).SetAccess("Read", false);
             //cannot review more than once
             //if the subject is a reviewer they will lose all access. SetAccess only sets the capability if it exists
             logData.add("Removed: ".concat(subjectIn).concat(" Review"));
-            logData.add("Gave: ".concat(subjectIn).concat(capabilityList.get(subjects.indexOf(subjectIn)).get(objects.indexOf(objectIn)).toString()));
+            logData.add("Gave: ".concat(subjectIn).concat(GetCapability(objectIn, subjectIn).toString()));
 
             return true;
         }
@@ -357,13 +351,13 @@ public final class EditorialACM extends ACM {
             if (subjectRoles.get(subjects.indexOf(subjectIn)).equals("Administrator"))
                 return true;
 
-            logData.add("Removed: ".concat(subjectIn).concat(capabilityList.get(subjects.indexOf(subjectIn)).get(objects.indexOf(objectIn)).toString()));
-            capabilityList.get(subjects.indexOf(subjectIn)).get(objects.indexOf(objectIn)).GiveNoAccess();
-            capabilityList.get(subjects.indexOf(subjectIn)).get(objects.indexOf(objectIn)).SetAccess("Owner", true);
+            logData.add("Removed: ".concat(subjectIn).concat(GetCapability(objectIn, subjectIn).toString()));
+            GetCapability(objectIn, subjectIn).GiveNoAccess();
+            GetCapability(objectIn, subjectIn).SetAccess("Owner", true);
 
             if (HasCapability(objectIn, subjectIn, "Owner")){
-                capabilityList.get(subjects.indexOf(subjectIn)).get(objects.indexOf(objectIn)).AddOverlappedAccess(defaultCapabilities.get("Author"));
-                logData.add("Gave: ".concat(subjectIn).concat(capabilityList.get(subjects.indexOf(subjectIn)).get(objects.indexOf(objectIn)).toString()));
+                GetCapability(objectIn, subjectIn).AddOverlappedAccess(defaultCapabilities.get("Author"));
+                logData.add("Gave: ".concat(subjectIn).concat(GetCapability(objectIn, subjectIn).toString()));
             }
             //No access after final reviews (unless owner)
 
