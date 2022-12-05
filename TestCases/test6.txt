@@ -1,0 +1,17 @@
+Add Author1 Author
+Add Author2 Author
+Create Manuscript1 Author1
+Create Manuscript2 Author2
+Print
+Read Manuscript1 Author1
+Read Manuscript2 Author1
+Read Manuscript1 Author2
+Read Manuscript2 Author2
+Edit Manuscript1 Author1
+Edit Manuscript2 Author1
+Edit Manuscript1 Author2
+Edit Manuscript2 Author2
+Submit Manuscript2 Author1
+Submit Manuscript1 Author2
+Submit Manuscript1 Author1
+Submit Manuscript2 Author2
