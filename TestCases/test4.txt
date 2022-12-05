@@ -1,0 +1,19 @@
+Add Author1 Author
+Add Editor1 Editor
+Add AssociateEditor1 Associate_Editor
+Add Reviewer1 Reviewer
+Create Manuscript1 Author1
+Print
+Submit Manuscript1 Author1
+Print
+Send Manuscript1 Editor1 AssociateEditor1
+Accept Manuscript1 AssociateEditor1
+Send Manuscript1 AssociateEditor1 Reviewer1
+Accept Manuscript1 Reviewer1
+Print
+Review Manuscript1 Reviewer1
+Review Manuscript1 AssociateEditor1
+Consider_Reviews Manuscript1 AssociateEditor1 Accept
+Review Manuscritpt1 Editor1
+Consider_Reviews Manuscript1 Editor1 Accept
+Print
