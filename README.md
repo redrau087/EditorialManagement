@@ -11,18 +11,25 @@
 - Administrator
 
 
+## Actions Available Within the Editorial Management System
+- Owner
+- Edit
+- Read
+- Submit
+- Send
+- Accept
+- Review
+- Consider Reviews
 
-### Author
-Authors can create and write their own manuscripts along with submitting
 
-### Editor
-Editors can, once the manuscript has been submitted, read the manuscript, send it to associate editors, review the manuscript, and make final decisions on whether the manuscript is acceptable
+Authors have Owner/Edit/Read/Submit on manuscripts they created. They have no capabilities on other manuscripts (unless they have an Author/Associate Editor  or Author/Reviewer role)
 
-### Associate Editor
-Associate editors can, once invited, read the manuscript, send it to reviews, review the manuscript, and make final decisions on whether the manuscript is acceptable
 
-### Reviewer
-Reviews can, once invited, read and review the manuscript
+Editors have Read/Send/Review/Consider Reviews on manuscripts that have been submitted. Once they review a manuscript, the only capability they will have is consider reviews. Once an editor performs the consider reviews action all access is lost. The send capability gives a reviewer or associate editor the accept capability
 
-### Administrator
-Administrators can theoretically perform any action the system is capable of
+
+Associate Editors have Read/Send/Review/Consider Reviews on manuscripts they have been invited to and accepted. An un-invited associate editor will have no capabilities and an invited associate editor will have the accept capability. Once using the accept capability, the associate editor gains Read/Send/Review/Consider Reviews. Similarly to the Editor, once the manuscript is reviewed the only access left is consider reviews. Consider Reviews also removes access once used
+
+Reviewers have Read/Review on manuscripts they have been invited to and accepted. Once the review is used all access is lost
+
+Administrators have all possible actions on each manuscript in the system
